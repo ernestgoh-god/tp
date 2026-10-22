@@ -38,7 +38,10 @@ class ContractsTest {
         assertEquals(0, new Command.DeleteTask(0).id());
         assertThrows(NullPointerException.class, () -> new Command.AddTask(null, command.deadline(), 30));
         assertThrows(NullPointerException.class, () -> new Command.ScheduleDate(null));
-        assertEquals(15, Command.class.getPermittedSubclasses().length);
+        // @@author ernestgoh-god
+        assertEquals(1, new Command.ReviseTaskRemaining(1, 1).remainingMinutes());
+        assertEquals(16, Command.class.getPermittedSubclasses().length);
+        // @@author ka-how
     }
 
     @Test

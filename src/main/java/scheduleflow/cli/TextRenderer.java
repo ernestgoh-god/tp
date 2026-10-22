@@ -49,6 +49,20 @@ public final class TextRenderer {
     public TextRenderer() {
     }
 
+    // @@author ernestgoh-god
+    /**
+     * Reserves the confirmation for a revised task estimate.
+     *
+     * @param task persisted task with its revised remaining minutes
+     * @return confirmation text once Printing implements this method
+     * @throws UnsupportedOperationException until Printing supplies the response
+     */
+    public String taskRemainingUpdated(Task task) {
+        // TODO(ka-how): implement task remaining-work confirmation and exact-output tests.
+        throw new UnsupportedOperationException("Task remaining-work rendering is not implemented yet.");
+    }
+    // @@author ka-how
+
     /**
      * Returns command help.
      */

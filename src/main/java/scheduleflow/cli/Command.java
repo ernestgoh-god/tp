@@ -72,6 +72,12 @@ public sealed interface Command {
     record DeleteTask(int id) implements Command {
     }
 
+    // @@author ernestgoh-god
+    /** Carries a replacement remaining-work estimate without interpreting it as completed work. */
+    record ReviseTaskRemaining(int id, int remainingMinutes) implements Command {
+    }
+    // @@author ka-how
+
     /**
      * Carries parsed weekly commitment fields without overlap validation.
      */

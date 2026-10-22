@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import scheduleflow.common.ValidationException;
 import scheduleflow.commitment.CommitmentService;
 import scheduleflow.model.Commitment;
 import scheduleflow.model.Snapshot;
@@ -107,6 +108,10 @@ public final class CommandDispatcher {
             case Command.AddTask add -> addTask(add, state, now);
             case Command.ListTasks ignored -> renderer.tasks(tasks.list(state.snapshot()));
             case Command.DeleteTask delete -> deleteTask(delete.id(), state);
+            // @@author ernestgoh-god
+            case Command.ReviseTaskRemaining ignored -> throw new ValidationException(
+                    "Revising remaining work is awaiting task-service integration.");
+            // @@author ka-how
             case Command.AddCommitment add -> addCommitment(add, state);
             case Command.EditCommitment edit -> editCommitment(edit, state);
             case Command.ListCommitments ignored -> renderer.commitments(commitments.list(state.snapshot()));

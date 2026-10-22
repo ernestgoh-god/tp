@@ -25,6 +25,32 @@ class CommandParserTest {
     private static final String SCHEDULE_USAGE = "schedule today OR schedule YYYY-MM-DD";
     private final CommandParser parser = new CommandParser();
 
+    // @@author ernestgoh-god
+    @Test
+    void parse_taskRemaining_acceptsPositiveWholeMinutes() throws ParseException {
+        assertEquals(new Command.ReviseTaskRemaining(1, 90),
+                parser.parse("task remaining T1 remaining/90"));
+        assertEquals(new Command.ReviseTaskRemaining(12, 1),
+                parser.parse(" task  remaining  T12  remaining/1 "));
+        assertEquals(new Command.ReviseTaskRemaining(2, Integer.MAX_VALUE),
+                parser.parse("task remaining T2 remaining/2147483647"));
+    }
+
+    @Test
+    void parse_taskRemaining_rejectsMalformedIdsMinutesAndFields() {
+        String usage = "task remaining TNUMBER remaining/MINUTES";
+        for (String input : List.of("task remaining", "task remaining 1 remaining/90",
+                "task remaining T0 remaining/90", "task remaining T01 remaining/90",
+                "task remaining T1 remaining/0", "task remaining T1 remaining/-30",
+                "task remaining T1 remaining/01", "task remaining T1 remaining/2147483648",
+                "task remaining T2147483648 remaining/90", "task remaining T1 d/90",
+                "task remaining T1 remaining/90 remaining/30", "task remaining T1 remaining/90 extra",
+                "task remaining T1 remaining/90\tother")) {
+            assertEquals(usage, assertThrows(ParseException.class, () -> parser.parse(input), input).usage());
+        }
+    }
+    // @@author ka-how
+
     // @@author GabrielYuSP
     @Test
     void parse_hoursCommands_supportsWeekdaysDatesAndResets() throws ParseException {

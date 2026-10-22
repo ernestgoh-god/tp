@@ -109,6 +109,12 @@ Examples below are independent unless a sequence is explicitly described. Use ex
 
 ## Tasks
 
+> **Planned issue #41 command:** `task remaining T1 remaining/90` will replace
+> the estimate for an active task with 90 whole minutes; it does not record
+> completed work. The parser recognizes this form, but the console currently
+> reports that service integration is pending. Existing task commands remain
+> available until revision, saving and output are connected.
+
 ### Recording duration (tasks and commitments)
 
 Enter duration when adding a task or commitment using `d/MINUTES`; there is no

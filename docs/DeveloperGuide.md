@@ -296,6 +296,16 @@ rules are required by the root `AGENTS.md` and do not change command behaviour.
 
 ### Commands and parsing
 
+Issue #41 parser preparation recognizes `task remaining TNUMBER remaining/MINUTES`
+and returns `ReviseTaskRemaining` without reading state. It requires positive
+whole-minute tokens; the task service decides whether the ID is active and
+whether the new estimate changes anything. Dispatch currently reports pending
+integration because the teammate's `reviseRemaining` service is not yet on team
+master. `TextRenderer.taskRemainingUpdated` is an unwired throwing skeleton
+marked for Ka How. The parser, transport, tests and skeleton carry scoped Ernest
+authorship tags, leaving existing Printing code attributed to its owners.
+Service integration, saved transaction tests and output tests remain pending.
+
 `CommandParser.parse` implements all command formats in the User Guide and
 returns the existing nested `Command` records. The parser has no clock, storage
 or application-state dependency. `schedule today` produces `Command.ScheduleToday`;

@@ -1,5 +1,10 @@
 # ScheduleFlow UI test plan
 
+Issue #41 remaining-work grammar has parser-level JUnit coverage. Packaged
+revision and rollback acceptance remain planned until task-service integration,
+dispatcher saving and Printing's confirmation are implemented. Existing active
+scenarios continue to cover the unchanged console commands.
+
 All fifteen maintained process scenarios are active. They exercise the packaged
 JAR in fresh temporary folders, with restart sessions sharing only their own
 saved data. Review this plan and `ui-scenarios.json` after each coherent code
