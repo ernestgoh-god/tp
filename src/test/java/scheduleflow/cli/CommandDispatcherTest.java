@@ -203,7 +203,7 @@ class CommandDispatcherTest {
         CommandDispatcher dispatcher = dispatcher(storage, CLOCK);
         List<Command> invalid = List.of(new Command.AddTask("Past", NOW, 30),
                 new Command.AddTask("Too late", TimeRules.horizonEnd(NOW).plusMinutes(1), 30),
-                new Command.AddTask("Bad duration", NOW.plusDays(1), 45),
+                new Command.AddTask("Bad duration", NOW.plusDays(1), 0),
                 new Command.AddCommitment("Unaligned", DayOfWeek.MONDAY, LocalTime.of(10, 15), 30),
                 new Command.AddCommitment("Overlap", DayOfWeek.MONDAY, LocalTime.of(10, 30), 30),
                 new Command.AddCommitment("Too long", DayOfWeek.MONDAY, LocalTime.of(23, 30), 60),
@@ -247,7 +247,7 @@ class CommandDispatcherTest {
         FakeStorage storage = new FakeStorage(state.snapshot());
         Command.AddTask command = new Command.AddTask("Boundary", TimeRules.horizonEnd(NOW), 30);
         dispatcher(storage, CLOCK).execute(command, state);
-        assertEquals(command.deadline(), state.snapshot().tasks().getFirst().deadline());
+        assertEquals(command.deadline(), state.snapshot().tasks().getFirst().deadline().orElseThrow());
     }
 
     @Test
@@ -386,7 +386,7 @@ class CommandDispatcherTest {
     @Test
     void execute_loadedTasks_preservesNumericIdsAndReportsPastAndOutsideHorizon() throws Exception {
         Task ten = new Task(10, "Ten", NOW.plusDays(1), 30);
-        Task two = new Task(2, "Two", ten.deadline(), 30);
+        Task two = new Task(2, "Two", ten.deadline().orElseThrow(), 30);
         Task overdue = new Task(1, "Overdue", NOW.minusDays(1), 60);
         Task outside = new Task(11, "Outside", TimeRules.horizonEnd(NOW).plusDays(1), 90);
         Snapshot snapshot = new Snapshot(List.of(ten, two, overdue, outside), List.of(), 12, 1);
@@ -443,6 +443,34 @@ class CommandDispatcherTest {
         return new Snapshot(List.of(new Task(2, "Existing", NOW.plusDays(1), 30)),
                 List.of(new Commitment(2, "Class", DayOfWeek.MONDAY, LocalTime.of(10, 0), 60)), 3, 3);
     }
+
+    // @@author ernestgoh-god
+    @Test
+    void execute_reviseTaskRemaining_pendingPrintingPreservesSavedAndLiveState() throws Exception {
+        Snapshot original = populatedSnapshot();
+        AppState state = new AppState(original);
+        Plan plan = new EarliestDeadlinePlanner().generate(original, NOW);
+        state.replacePlan(plan);
+        FakeStorage storage = new FakeStorage(original);
+        CommandDispatcher dispatcher = dispatcher(storage, CLOCK);
+        for (int minutes : List.of(30, 90, Integer.MAX_VALUE)) {
+            ValidationException failure = assertThrows(ValidationException.class,
+                    () -> dispatcher.execute(new Command.ReviseTaskRemaining(2, minutes), state));
+            assertEquals("Revising remaining work is awaiting printing.", failure.getMessage());
+            assertSame(original, state.snapshot());
+            assertSame(original, storage.saved);
+            assertSame(plan, state.currentPlan().orElseThrow());
+            assertEquals(0, storage.saveCalls);
+        }
+        for (Command.ReviseTaskRemaining command : List.of(new Command.ReviseTaskRemaining(99, 90),
+                new Command.ReviseTaskRemaining(2, 0), new Command.ReviseTaskRemaining(2, -1))) {
+            assertThrows(ValidationException.class, () -> dispatcher.execute(command, state));
+            assertSame(original, state.snapshot());
+            assertSame(plan, state.currentPlan().orElseThrow());
+            assertEquals(0, storage.saveCalls);
+        }
+    }
+    // @@author ka-how
 
     /**
      * Supplies all mutation paths against the same initial records.

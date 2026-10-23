@@ -4,6 +4,7 @@ package scheduleflow.cli;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
@@ -23,6 +24,7 @@ import scheduleflow.planning.ScheduleView;
 import scheduleflow.planning.SlotKind;
 import scheduleflow.planning.StudySession;
 import scheduleflow.planning.UnallocatedWork;
+import scheduleflow.task.TaskScope;
 
 /**
  * Formats output without a trailing newline, clock reads, direct console I/O or state mutation.
@@ -53,12 +55,12 @@ public final class TextRenderer {
     /**
      * Reserves the confirmation for a revised task estimate.
      *
-     * @param task persisted task with its revised remaining minutes
+     * @param task validated task candidate with its revised remaining minutes
      * @return confirmation text once Printing implements this method
      * @throws UnsupportedOperationException until Printing supplies the response
      */
     public String taskRemainingUpdated(Task task) {
-        // TODO(ka-how): implement task remaining-work confirmation and exact-output tests.
+        // TODO(ka-how): implement confirmation, add command help, and activate exact-output UI tests.
         throw new UnsupportedOperationException("Task remaining-work rendering is not implemented yet.");
     }
     // @@author ka-how
@@ -117,9 +119,104 @@ public final class TextRenderer {
     public String taskAdded(Task task) {
         Objects.requireNonNull(task, "task");
         LOGGER.log(Level.FINE, "Formatting task addition response");
-        return finish("Added " + task.displayId() + ": " + task.name() + "\nDue: " + DATE_TIME.format(task.deadline())
+        // @@author nickpatt
+        return finish("Added " + task.displayId() + ": " + task.name() + "\nDue: "
+                + task.deadline().map(DATE_TIME::format).orElse("No deadline")
                 + " | Duration: " + task.remainingMinutes() + " min");
+        // @@author ka-how
     }
+
+    // @@author nickpatt
+    /**
+     * Reserves formatting of a successfully saved task edit; not implemented or connected to the CLI.
+     * The planned response will use the stored ID, name, deadline and estimate without mutation or I/O.
+     *
+     * @param task successfully saved edited task
+     * @return planned edit confirmation without a trailing newline
+     * @throws UnsupportedOperationException always, until task edit rendering is implemented
+     */
+    public String taskEdited(Task task) {
+        // TODO(Tasks): implement TextRenderer.taskEdited
+        throw new UnsupportedOperationException("Task edit rendering is not implemented yet.");
+    }
+
+    /**
+     * Reserves an unwired progress confirmation using actual credited work; performs no rendering yet.
+     *
+     * @param task saved task after progress
+     * @param creditedMinutes actual whole minutes credited, after percentage rounding
+     * @return planned confirmation
+     * @throws UnsupportedOperationException always, pending Task rendering
+     */
+    public String taskProgressUpdated(Task task, int creditedMinutes) {
+        // TODO(Tasks): implement TextRenderer.taskProgressUpdated
+        throw new UnsupportedOperationException("Task progress rendering is not implemented yet.");
+    }
+
+    /**
+     * Reserves an unwired completion confirmation.
+     * @throws UnsupportedOperationException always, pending Task rendering
+     */
+    public String taskCompleted(Task task) {
+        // TODO(Tasks): implement TextRenderer.taskCompleted
+        throw new UnsupportedOperationException("Task completion rendering is not implemented yet.");
+    }
+
+    /**
+     * Reserves an unwired reopening confirmation.
+     * @throws UnsupportedOperationException always, pending Task rendering
+     */
+    public String taskReopened(Task task) {
+        // TODO(Tasks): implement TextRenderer.taskReopened
+        throw new UnsupportedOperationException("Task reopening rendering is not implemented yet.");
+    }
+
+    /**
+     * Reserves an unwired confirmation for a saved priority change; performs no rendering yet.
+     * @throws UnsupportedOperationException always, pending Task rendering
+     */
+    public String taskPriorityUpdated(Task task) {
+        // TODO(Tasks): implement TextRenderer.taskPriorityUpdated
+        throw new UnsupportedOperationException("Task priority rendering is not implemented yet.");
+    }
+
+    /**
+     * Reserves an unwired scoped list in service-supplied order; performs no rendering yet.
+     * @throws UnsupportedOperationException always, pending Task rendering
+     */
+    public String tasksByScope(List<Task> tasks, TaskScope scope) {
+        // TODO(Tasks): implement TextRenderer.tasksByScope
+        throw new UnsupportedOperationException("Scoped task rendering is not implemented yet.");
+    }
+
+    /**
+     * Reserves an unwired priority list in service-supplied order; performs no rendering yet.
+     * @throws UnsupportedOperationException always, pending Task rendering
+     */
+    public String tasksByPriority(List<Task> tasks) {
+        // TODO(Tasks): implement TextRenderer.tasksByPriority
+        throw new UnsupportedOperationException("Task priority list rendering is not implemented yet.");
+    }
+
+    /**
+     * Reserves unwired search results for the supplied query; performs no rendering yet.
+     * @throws UnsupportedOperationException always, pending Task rendering
+     */
+    public String taskSearchResults(List<Task> tasks, String query) {
+        // TODO(Tasks): implement TextRenderer.taskSearchResults
+        throw new UnsupportedOperationException("Task search rendering is not implemented yet.");
+    }
+
+    /**
+     * Reserves an unwired overdue list using caller-captured time; reads no clock and renders nothing yet.
+     * @throws UnsupportedOperationException always, pending Task rendering
+     */
+    public String overdueTasks(List<Task> tasks, LocalDateTime capturedNow) {
+        // TODO(Tasks): implement TextRenderer.overdueTasks
+        throw new UnsupportedOperationException("Overdue task rendering is not implemented yet.");
+    }
+    // @@author
+    // @@author ka-how
 
     /**
      * Formats the removed task.
@@ -150,8 +247,10 @@ public final class TextRenderer {
         StringJoiner lines = new StringJoiner("\n");
         lines.add("=== Actionable Tasks ===").add("ID | Name | Duration | Deadline");
         for (Task task : tasks) {
+            // @@author nickpatt
             lines.add(task.displayId() + " | " + task.name() + " | " + task.remainingMinutes()
-                    + " min | " + DATE_TIME.format(task.deadline()));
+                    + " min | " + task.deadline().map(DATE_TIME::format).orElse("No deadline"));
+            // @@author ka-how
         }
         return finish(lines.add("Total: " + tasks.size() + " task(s).").toString());
     }
@@ -249,7 +348,9 @@ public final class TextRenderer {
         if (plan.isComplete()) {
             return finish("Study plan generated successfully! Type 'schedule today' to view your sessions.");
         }
-        long scheduled = plan.sessions().stream().mapToLong(StudySession::minutes).sum();
+        // @@author nickpatt
+        long scheduled = plan.sessions().stream().mapToLong(StudySession::workMinutes).sum();
+        // @@author ka-how
         long unallocated = plan.unallocated().stream().mapToLong(UnallocatedWork::minutes).sum();
         StringJoiner lines = new StringJoiner("\n");
         lines.add("Study plan generated with unallocated work.");
@@ -380,10 +481,15 @@ public final class TextRenderer {
             String reason = switch (work.reason()) {
                 case DEADLINE_PASSED -> "deadline passed";
                 case OUTSIDE_HORIZON -> "outside planning horizon";
-                case INSUFFICIENT_CAPACITY -> "insufficient time before deadline";
+                // @@author nickpatt
+                case INSUFFICIENT_CAPACITY -> work.deadline().isEmpty()
+                        ? "insufficient available study time" : "insufficient time before deadline";
+                        // @@author ka-how
             };
+            // @@author nickpatt
             lines.add("T" + work.taskId() + ": " + work.taskName() + " | Unallocated: " + work.minutes()
-                    + " min | Reason: " + reason);
+                    + " min | Reason: " + reason + (work.deadline().isEmpty() ? " | No deadline" : ""));
+            // @@author ka-how
         }
     }
 

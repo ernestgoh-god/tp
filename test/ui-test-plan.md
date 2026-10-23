@@ -1,11 +1,12 @@
 # ScheduleFlow UI test plan
 
-Issue #41 remaining-work grammar has parser-level JUnit coverage. Packaged
-revision and rollback acceptance remain planned until task-service integration,
-dispatcher saving and Printing's confirmation are implemented. Existing active
-scenarios continue to cover the unchanged console commands.
+Issue #41 remaining-work grammar, service validation and dispatcher wiring have
+JUnit coverage. The renderer is a throwing skeleton reserved for Ka How. Packaged
+revision, restart and save-failure acceptance remain planned until Printing's
+confirmation is implemented; the pending command reports a recoverable error
+without saving or clearing the plan.
 
-All fifteen maintained process scenarios are active. They exercise the packaged
+All sixteen maintained process scenarios are active. They exercise the packaged
 JAR in fresh temporary folders, with restart sessions sharing only their own
 saved data. Review this plan and `ui-scenarios.json` after each coherent code
 update. The fixtures are the executable source of truth for exact responses.
@@ -79,6 +80,29 @@ timeouts and expected output; Java 25 and isolated workspace data were retained.
 
 ## Active packaged scenarios
 
+Task edit, deadline clear/absence, progress/session percentages, revised remaining,
+completion and reopening APIs have deterministic JUnit tests. Issue #41 has a
+parser/dispatcher command, but its `taskRemainingUpdated` renderer is a throwing
+skeleton and does not count as feature acceptance. `taskEdited`,
+`taskProgressUpdated`, `taskCompleted` and `taskReopened` remain unwired skeletons.
+CLI acceptance for these operations is deferred until rendering is ready.
+
+PR3 review: priority mutation, scoped lists, priority sorting, literal Unicode
+search and exact-time overdue filtering are service APIs with deterministic
+`TaskServiceTest` coverage only. The five new priority/query renderer methods are
+unwired TODO(Tasks) throwing skeletons, not feature acceptance. No parser or
+dispatcher commands were added, so no new active UI commands or fixture changes
+are expected. All sixteen existing active cases remain regression coverage.
+
+Compatibility checks cover optional deadlines in existing add/list/remainder
+output, exact plan work totals (not rounded capacity), 45-minute work versus
+60-minute reservation, partial 30/15 allocation, completed-task exclusion, long
+arithmetic, custom hours, identity no-ops and legacy/v2 save round trips.
+Tasks now accept positive whole-minute additions; commitments retain the positive
+30-minute rule, including UI-006's rejected commitment `d/45`. All existing
+slot-aligned fixture responses remain unchanged. New restored-data UI-016 is
+active because existing list/plan/delete/restart commands need no new wiring.
+
 | ID | Coverage | Status |
 | --- | --- | --- |
 | UI-001 | Missing file, empty lists and absent plan | Active |
@@ -96,6 +120,7 @@ timeouts and expected output; Java 25 and isolated workspace data were retained.
 | UI-013 | Multiple commitment conflicts in time order, saved-data retention and retry ID | Active |
 | UI-014 | Partial commitment edits, unchanged IDs, rejection, plan invalidation and Unicode restart | Active |
 | UI-015 | Study hours precedence, validation, resets, plan invalidation and saved restarts | Active |
+| UI-016 | Extended saved tasks: absent deadlines, completed overdue exclusion, exact work and restart | Active |
 
 UI-015 asserts reset confirmations name the restored source and its endpoints.
 
